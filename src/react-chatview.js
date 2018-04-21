@@ -22,6 +22,8 @@ export default class ChatView extends Component {
     usePropLoading: PropTypes.bool,
     isInfiniteLoading: PropTypes.bool,
     loadingSpinnerDelegate: PropTypes.element,
+    useSmoothScrollingWrapper: PropTypes.bool,
+    scrollableStyle: PropTypes.object,
     className: PropTypes.string,
     children: PropTypes.node,
     returnScrollable: PropTypes.func,
@@ -42,6 +44,8 @@ export default class ChatView extends Component {
 
     this.pollScroll = this.pollScroll.bind(this);
     this.onScroll = this.onScroll.bind(this);
+    this.setScrollable = this.setScrollable.bind(this);
+    this.setSmoothScrollingWrapper = this.setSmoothScrollingWrapper.bind(this);
   }
 
   componentDidMount() {
@@ -150,6 +154,14 @@ export default class ChatView extends Component {
     return this.props.usePropLoading ? this.props.isInfiniteLoading : this.state.isInfiniteLoading;
   }
 
+  setScrollable(e) {
+    this.scrollable = e;
+  }
+
+  setSmoothScrollingWrapper(e) {
+    this.smoothScrollingWrapper = e;
+  }
+
   render() {
     const displayables = clone(this.props.children);
     if (this.props.flipped && !this.props.reversed) {
@@ -160,17 +172,29 @@ export default class ChatView extends Component {
       {this.getIsInfiniteLoading() ? this.props.loadingSpinnerDelegate : null}
     </div>);
 
-    return (
-      <div className={this.props.className} ref={e => { this.scrollable = e; }}
-        style={{ overflowX: 'hidden', overflowY: 'auto' }}
-      >
-        <div ref={e => { this.smoothScrollingWrapper = e; }}>
+    if (this.props.useSmoothScrollingWrapper) {
+      return (
+        <div className={this.props.className} ref={this.setScrollable}
+             style={this.props.scrollableStyle}
+        >
+          <div ref={this.setSmoothScrollingWrapper}>
+            {this.props.flipped ? loadSpinner : null}
+            {displayables}
+            {this.props.flipped ? null : loadSpinner}
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className={this.props.className} ref={this.setScrollable}
+             style={this.props.scrollableStyle}
+        >
           {this.props.flipped ? loadSpinner : null}
           {displayables}
           {this.props.flipped ? null : loadSpinner}
         </div>
-      </div>
-    );
+      );
+    }
   }
 }
 
@@ -180,5 +204,8 @@ ChatView.defaultProps = {
   scrollLoadThreshold: 10,
   shouldTriggerLoad: () => { return true; },
   loadingSpinnerDelegate: <div />,
+  // True for backwards compatibility
+  useSmoothScrollingWrapper: true,
+  scrollableStyle: { overflowX: 'hidden', overflowY: 'auto' },
   className: ''
 };
