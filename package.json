@@ -10,8 +10,8 @@
   "scripts": {
     "build": "npm run lint && webpack && npm run dist && npm run lib",
     "lint": "eslint -c .eslintrc src",
-    "dist": "NODE_ENV=prod webpack --config webpack.dist.js",
-    "lib": "BABEL_ENV=commonjs babel src --out-dir lib"
+    "dist": "cross-env NODE_ENV=prod webpack --config webpack.dist.js",
+    "lib": "cross-env BABEL_ENV=commonjs babel src --out-dir lib"
   },
   "repository": {
     "type": "git",
@@ -24,6 +24,7 @@
     "infinite"
   ],
   "dependencies": {
+    "cross-env": "^5.1.4",
     "lodash.clone": "^4.5.0"
   },
   "peerDependencies": {

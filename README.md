@@ -50,7 +50,9 @@ It is really easy to use. The actual rows of content should be passed as **child
  * `reversed` true for don't reverse elements
  * `scrollLoadThreshold` pixel distance from top that triggers an infinite load
  * `shouldTriggerLoad` callback function to check if chat view should trigger infinite load cycle when scroll passed `scrollLoadThreshold`. This callback is optional and by default  `onInfiniteLoad` is always triggered.
- * `onInfiniteLoad` load request callback, should cause a state change which renders more children
+ * `onInfiniteLoad` load request callback, should cause a state change which renders more children. Must return a promise when `usePropLoading=false`
+ * `usePropLoading` false(default) uses a promise returned from the `onInfiniteLoad` callback, true requires the user to set `isInfiniteLoading`
+ * `isInfiniteLoading` indicates whether loading is currently in progress when using `usePropLoading=true`
  * `returnScrollable` return scollable object for scrollable event handling
 
 See the [jsfiddle example](https://jsfiddle.net/gimdongwoo/xo4fccbu/) for a complete working example.

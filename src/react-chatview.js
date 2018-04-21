@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import clone from 'lodash.clone';
 
@@ -19,6 +19,8 @@ export default class ChatView extends Component {
     scrollLoadThreshold: PropTypes.number,
     shouldTriggerLoad: PropTypes.func,
     onInfiniteLoad: PropTypes.func.isRequired,
+    usePropLoading: PropTypes.bool,
+    isInfiniteLoading: PropTypes.bool,
     loadingSpinnerDelegate: PropTypes.element,
     className: PropTypes.string,
     children: PropTypes.node,
@@ -37,6 +39,9 @@ export default class ChatView extends Component {
     this.state = {
       isInfiniteLoading: false
     };
+
+    this.pollScroll = this.pollScroll.bind(this);
+    this.onScroll = this.onScroll.bind(this);
   }
 
   componentDidMount() {
@@ -76,24 +81,28 @@ export default class ChatView extends Component {
 
   // detect when dom has changed underneath us- either scrollTop or scrollHeight (layout reflow)
   // may have changed.
-  onScroll = () => {
+  onScroll() {
     if (this.scrollable.scrollTop !== this.scrollTop) {
       if (this.shouldTriggerLoad()) {
-        this.setState({ isInfiniteLoading: true });
+        if (!this.props.usePropLoading) {
+          this.setState({isInfiniteLoading: true});
+        }
         const p = this.props.onInfiniteLoad();
-        p.then(() => this.setState({ isInfiniteLoading: false }));
+        if (!this.props.usePropLoading) {
+          p.then(() => this.setState({isInfiniteLoading: false}));
+        }
       }
       // the dom is ahead of the state
       this.updateScrollTop();
     }
   }
 
-  pollScroll = () => {
+  pollScroll() {
     this.onScroll();
     this.rafRequestId = window.requestAnimationFrame(this.pollScroll);
   }
 
-  isPassedThreshold = (flipped, scrollLoadThreshold, scrollTop, scrollHeight, clientHeight) => {
+  isPassedThreshold(flipped, scrollLoadThreshold, scrollTop, scrollHeight, clientHeight) {
     return flipped
       ? scrollTop <= scrollLoadThreshold
       : scrollTop >= (scrollHeight - clientHeight - scrollLoadThreshold);
@@ -106,7 +115,7 @@ export default class ChatView extends Component {
       this.scrollable.scrollTop,
       this.scrollable.scrollHeight,
       this.scrollable.clientHeight);
-    return passedThreshold && !this.state.isInfiniteLoading && this.props.shouldTriggerLoad();
+    return passedThreshold && !this.getIsInfiniteLoading() && this.props.shouldTriggerLoad();
   }
 
   updateScrollTop() {
@@ -137,6 +146,10 @@ export default class ChatView extends Component {
     // We are only handling half of the cases. Or an image resized above or below us.
   }
 
+  getIsInfiniteLoading() {
+    return this.props.usePropLoading ? this.props.isInfiniteLoading : this.state.isInfiniteLoading;
+  }
+
   render() {
     const displayables = clone(this.props.children);
     if (this.props.flipped && !this.props.reversed) {
@@ -144,7 +157,7 @@ export default class ChatView extends Component {
     }
 
     const loadSpinner = (<div ref={e => { this.loadingSpinner = e; }}>
-      {this.state.isInfiniteLoading ? this.props.loadingSpinnerDelegate : null}
+      {this.getIsInfiniteLoading() ? this.props.loadingSpinnerDelegate : null}
     </div>);
 
     return (
@@ -163,6 +176,7 @@ export default class ChatView extends Component {
 
 ChatView.defaultProps = {
   flipped: false,
+  usePropLoading: false,
   scrollLoadThreshold: 10,
   shouldTriggerLoad: () => { return true; },
   loadingSpinnerDelegate: <div />,
